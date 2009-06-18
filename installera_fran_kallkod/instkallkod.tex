@@ -1,0 +1,129 @@
+
+\documentclass{article}
+\usepackage{palatino}
+\usepackage[utf8]{inputenc}
+\usepackage[swedish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[pdftex,colorlinks=true,urlcolor=blue,pdfstartview=FitH]{hyperref}
+\nonfrenchspacing
+\clubpenalty=9999
+\widowpenalty=9999 
+\setcounter{tocdepth}{3}
+
+\title{Kompilera program från källkod i SUSE Linux}
+\author{Jonas Björk\\ \small{jonas@jonasbjork.net}}
+\date{2008-01-12}
+
+\begin{document}
+\maketitle
+\setlength{\parindent}{0em}
+\addtolength{\parskip}{\baselineskip}
+ 
+\section*{Installera från källkod}
+I SUSE Linux finns många program tillgängliga redan. En del finns klara för
+installation från skivorna eller de paketförråd (eng \emph{repositories}) som
+finns tillgängliga på nätet. Innan du börjar fundera på att kompilera ett program
+från källkod (eng \emph{source}) bör du söka i de paketförråd som finns och i
+sökmotorer som \href{http://rpm.pbone.net/}{pbone.net},
+\href{http://rpmfind.net/}{rpmfind.net} ,
+\href{http://www.tuxfinder.com/}{tuxfinder.com} och
+\href{http://www.rpmseek.com/}{rpmseek.com} . Du kan också prova att söka på
+nätet med sökmotorn Google efter programmets namn och SUSE, till exempel
+\texttt{apache suse rpm} . Det är inte alltid ett krav att det skall vara just
+en SUSE-rpm du måste använda för att installera programmet, utan ofta går det bra
+med ett RPM-paket från till exempel Red Hat eller Mandriva också. Ibland går det
+att göra om ett annat paket, från Debian(.deb) eller Slackware (.tgz), så det
+fungerar i SUSE Linux med hjälp av kommandot \textbf{alien}. 
+ 
+\textsf{VARNING!} Testa aldrig att installera främmande paket i en
+driftserver! Utvärdera dem på en testmaskin först så du ser att allt fungerar och ingenting
+slutar fungera.
+
+Att installera program från källkod är inte så svårt, men det kan krångla. När du
+har laddat ner källkoden är den troligen komprimerad med gzip (.gz) eller bzip2
+(.bz2) och arkiverad med tar (.tar). Ett paket som distribueras så kallas för
+\emph{tarball} . Du kan hitta källkod för många program på följande sidor:
+\href{http://freshmeat.net/}{freshmeat.net},
+\href{http://sourceforge.net/}{sourceforge.net},
+\href{http://www.gnomefiles.org/}{gnomefiles.org} och
+\href{http://www.kde-apps.org/}{kde-apps.org}. Vi har valt att ladda ner den
+påhittade filen joonix-1.2.tar.gz och skall extrahera källkoden så vi kan börja
+jobba med den. Vi använder kommandot \textbf{tar} för att extrahera filerna från
+arkivet, eftersom arkivet är komprimerat med \textbf{gzip} (det ser vi på
+filändelsen .gz ) måste vi packa upp arkivet först:
+\begin{verbatim}
+$ gunzip joonix-1.2.tar.gz
+\end{verbatim}
+Kvar blev en fil som heter \texttt{joonix-1.2.tar} , den extraherar vi med
+kommandot \textbf{tar} :
+\begin{verbatim}
+$ tar xf joonix-1.2.tar
+\end{verbatim}
+När vi tittar i vår katalog nu har vi fått en ny katalog, \texttt{joonix-1.2/}
+. Oftast skapar sådana här paket en ny katalog som heter samma sak som filen vi
+laddade hem, men det finns undantag. Hade filen varit komprimerad med bzip2
+(filändelsen \texttt{.bz2}) hade vi packat upp den med bzip2-kommandot istället
+för gunzip, vi kan också använda kommandot tar för att packa upp och extrahera
+filerna på en och samma gång:
+\begin{verbatim}
+$ tar zxf joonix-1.2.tar.gz
+$ tar jxf joonix-1.2.tar.bz2
+\end{verbatim}
+
+Skillnaden är flaggan \texttt{z} respektive flaggan \texttt{j}, beroende på om
+det är ett gzip- (z) eller ett bzip2- (j) komprimerat arkiv. Filnamnen på
+filer som innehåller källkod heter oftast programets namn och versionsnummer
+(i vårt fall heter programmet joonix och versionen är 1.2).
+
+Nu går vi in i katalogen som skapades med kommandot \textbf{cd joonix-1.2} .
+Lista filerna och se om det finns en fil som heter \texttt{README} och/eller
+\texttt{INSTALL} . README- och INSTALL-filerna innehåller information om vilket
+program du laddat ner, vem som skapat det och vilken licens programmet är släppt
+under. Du kan ofta hitta vilka beroenden (eng \emph{dependencies}) programmet har
+och hur du skall kompilera och installera programmet. Normalt förfarande för
+kompilering och installation är:
+\begin{verbatim}
+$ ./configure
+$ make
+$ make install
+\end{verbatim}
+
+Den mest kritiska fasen i kompileringen är när du kör \textbf{./configure} .
+configure tittar om din dator har allt som behövs för att kompilera programmet,
+saknar du något får du ett felmeddelande. Det gäller att försöka lista ut vad som
+saknas och sedan testa ./configure igen. Om du vet ungefär vad paketet är gjort
+för: är det ett konsollprogram, ett GNOME-program eller ett KDE-program?, kan du
+ofta lösa problemen genom att gå in i YaST2, Installera och ta bort program och
+välja Selections och därefter välja rätt utvecklingsmiljö (GNOME Development, KDE
+Development, C/C++ Compiler and Tools). I SUSE Linux heter paket som används för
+att kompilera andra program något med -devel-. Om configure säger att du saknar
+till exempel Qt behöver du qt3-devel paketet för att kompilera och qt3-paketet
+för att kunna köra programmet sedan. C/C++ Compiler and Tools behövs normalt sätt
+alltid för program som skall kompileras i SUSE Linux.
+
+\section*{alien}
+Med kommandot alien kan du konvertera Slackware (.tgz) och Debian (.deb) paket
+till RPM-paket. Det enklaste sättet att göra det är att skriva:
+\begin{verbatim}
+$ alien -r ett.debian.paket-1.deb
+\end{verbatim}
+Växeln \texttt{-r} är valet för att skapa ett RPM-paket. Tänk på att du måste ha
+ett paket för din processorarkitektur och att paket du försöker installera inte är beroende
+av bibliotek som inte finns tillgängliga i SUSE, i så fall måste du installera
+dem först. 
+
+\section*{Övningar}
+\begin{enumerate}
+\item[] Leta upp ett program på någon av sidorna vi nämner ovanför och ladda hem
+källkoden för det. Kompilera programmet och testa om det fungerar i ditt SUSE.
+Dokumentera vilka problem som uppstod och hur du löste dem.
+\item[] Använd Alien för att konvertera ett debianpaket, du hittar dem på
+\href{http://packages.debian.org/stable/}{packages.debian.org}, och installera
+det i SUSE. Dokumentera vilka problem som uppstod och hur du löste dem.
+\end{enumerate}
+
+
+\end{document}
